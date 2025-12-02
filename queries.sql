@@ -1,15 +1,12 @@
 /* =======================================================
-QODEX PROJECT - BASE TEMPLATE
+QODEX PROJECT - BASE TEMPLATE (Simplified)
 ======================================================= */
 
--- 1) CREATE DATABASE 
+-- 1) CREATE DATABASE
 CREATE DATABASE qodex;
+USE qodex;
 
--- 2) USE DATABASE
-USE qodex_db;
-
-/* 3) TABLES CREATION
-======================================================= */
+-- 2) TABLES CREATION
 
 -- TABLE 1: UTILISATEURS
 CREATE TABLE Utilisateurs (
@@ -17,9 +14,7 @@ CREATE TABLE Utilisateurs (
     nom            VARCHAR(100) NOT NULL,
     email          VARCHAR(100) NOT NULL UNIQUE,
     motdepasse     VARCHAR(255) NOT NULL,
-    user_role      VARCHAR(20) NOT NULL
-
-    CHECK (role IN ('enseignant', 'etudiant'))
+    role           ENUM('enseignant', 'etudiant') NOT NULL
 );
 
 -- TABLE 2: CATEGORIES
@@ -32,19 +27,15 @@ CREATE TABLE Categories (
 CREATE TABLE Quiz (
     id_quiz       INT PRIMARY KEY AUTO_INCREMENT,
     titre_quiz    VARCHAR(150) NOT NULL,
-    descriptions  TEXT,
+    description   TEXT,
     id_categorie  INT,
     id_enseignant INT,
     duree_minutes INT NOT NULL,
     date_creation DATETIME DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT quiz_categorie
-        FOREIGN KEY (id_categorie)
-        REFERENCES Categories(id_categorie),
-
-    CONSTRAINT quiz_enseignant
-        FOREIGN KEY (id_enseignant)
-        REFERENCES Utilisateurs(id_utilisateur)
+    CONSTRAINT fk_quiz_categorie
+        FOREIGN KEY (id_categorie) REFERENCES Categories(id_categorie),
+    CONSTRAINT fk_quiz_enseignant
+        FOREIGN KEY (id_enseignant) REFERENCES Utilisateurs(id_utilisateur)
 );
 
 -- TABLE 4: QUESTIONS
@@ -54,10 +45,8 @@ CREATE TABLE Questions (
     reponse_correcte TEXT NOT NULL,
     points           INT NOT NULL,
     id_quiz          INT NOT NULL,
-
-    CONSTRAINT question_quiz
-        FOREIGN KEY (id_quiz)
-        REFERENCES Quiz(id_quiz)
+    CONSTRAINT fk_question_quiz
+        FOREIGN KEY (id_quiz) REFERENCES Quiz(id_quiz)
 );
 
 -- TABLE 5: RESULTATS
@@ -67,155 +56,91 @@ CREATE TABLE Resultats (
     date_passage DATETIME NOT NULL,
     id_etudiant  INT NOT NULL,
     id_quiz      INT NOT NULL,
-
-    CONSTRAINT result_etudiant
-        FOREIGN KEY (id_etudiant)
-        REFERENCES Utilisateurs(id_utilisateur),
-
-    CONSTRAINT result_quiz
-        FOREIGN KEY (id_quiz)
-        REFERENCES Quiz(id_quiz)
+    CONSTRAINT fk_result_etudiant
+        FOREIGN KEY (id_etudiant) REFERENCES Utilisateurs(id_utilisateur),
+    CONSTRAINT fk_result_quiz
+        FOREIGN KEY (id_quiz) REFERENCES Quiz(id_quiz)
 );
 
--- INSERT INTO CATEGORIES
+-- ===== INSERT DATA =====
+
+-- Categories
 INSERT INTO Categories (nom_categorie)
 VALUES ('Informatique'),
        ('Mathématiques'),
        ('Histoire');
 
--- INSERT INTO UTILISATEURS (1 teacher + 2 students)
+-- Utilisateurs
 INSERT INTO Utilisateurs (nom, email, motdepasse, role)
-VALUES ('Prof badr', 'badr@example.com', '1234', 'enseignant'),
+VALUES ('Prof Badr', 'badr@example.com', '1234', 'enseignant'),
        ('Sara', 'sara@example.com', '1234', 'etudiant'),
-       ('ali', 'ali@example.com', '1234', 'etudiant');
+       ('Ali', 'ali@example.com', '1234', 'etudiant');
 
--- INSERT INTO QUIZ 
-INSERT INTO Quiz (titre_quiz, descriptions, id_categorie, id_enseignant, duree_minutes)
+-- Quiz
+INSERT INTO Quiz (titre_quiz, description, id_categorie, id_enseignant, duree_minutes)
 VALUES ('Quiz SQL', 'Introduction aux bases de SQL', 1, 1, 30),
        ('Quiz Math', 'Révision des équations simples', 2, 1, 45);
 
--- INSERT INTO QUESTIONS (id_quiz must exist in Quiz)
+-- Questions
 INSERT INTO Questions (texte_question, reponse_correcte, points, id_quiz)
 VALUES ('Que signifie SQL ?', 'Structured Query Language', 10, 1),
        ('2 + 2 = ?', '4', 5, 2),
        ('3 + 5 = ?', '8', 5, 2);
 
--- INSERT INTO results
-INSERT INTO Results (score, date_passage, id_etudiant, id_quiz)
+-- Resultats
+INSERT INTO Resultats (score, date_passage, id_etudiant, id_quiz)
 VALUES (80, NOW(), 2, 1),
        (60, NOW(), 3, 1),
        (90, NOW(), 2, 2),
        (40, NOW(), 3, 2);
 
-/* =======================================================
-5) 23 QUERIES
-======================================================= */
+-- ===== 23 QUERIES =====
 
-/* QUERY 1 : Add a new quiz created by a teacher */
-INSERT INTO quiz (titre_quiz, descriptions, id_categorie, id_enseignant, duree_minutes)
+INSERT INTO Quiz (titre_quiz, description, id_categorie, id_enseignant, duree_minutes)
 VALUES ('Quiz SQL', 'Introduction aux bases de SQL', 1, 1, 30);
 
-/* QUERY 2 : Modify the duration of an existing quiz */
-UPDATE quiz
-SET duree_minutes = 10
-WHERE id_quiz = 1;
+UPDATE Quiz SET duree_minutes = 10 WHERE id_quiz = 1;
 
-/* QUERY 3 : Show all users */
-SELECT * FROM utilisateurs;
+SELECT * FROM Utilisateurs;
 
-/* QUERY 4 : Show only names and emails of users */
-SELECT nom, email
-FROM utilisateurs;
+SELECT nom, email FROM Utilisateurs;
 
-/* QUERY 5 : Show all quizzes */
-SELECT * FROM quiz;
+SELECT * FROM Quiz;
 
-/* QUERY 6 : Show only titles of all quizzes */
-SELECT titre_quiz
-FROM quiz;
+SELECT titre_quiz FROM Quiz;
 
-/* QUERY 7 : Show all categories */
-SELECT * FROM categories;
+SELECT * FROM Categories;
 
-/* QUERY 8 : Show users who are teachers */
-SELECT *
-FROM utilisateurs
-WHERE user_role = 'enseignant';
+SELECT * FROM Utilisateurs WHERE role = 'enseignant';
 
-/* QUERY 9 : Show users who are students */
-SELECT *
-FROM utilisateurs
-WHERE user_role = 'etudiant';
+SELECT * FROM Utilisateurs WHERE role = 'etudiant';
 
-/* QUERY 10 : Show quizzes with duration > 20 minutes */
-SELECT *
-FROM quiz
-WHERE duree_minutes > 20;
+SELECT * FROM Quiz WHERE duree_minutes > 20;
 
-/* QUERY 11 : Show quizzes with duration <= 28 minutes */
-SELECT *
-FROM quiz
-WHERE duree_minutes <= 28;
+SELECT * FROM Quiz WHERE duree_minutes <= 28;
 
-/* QUERY 12 : Show questions worth more than 5 points */
-SELECT *
-FROM questions
-WHERE points > 5;
+SELECT * FROM Questions WHERE points > 5;
 
-/* QUERY 13 : Show quizzes with duration between 20 and 40 minutes */
-SELECT *
-FROM quiz
-WHERE duree_minutes BETWEEN 20 AND 40;
+SELECT * FROM Quiz WHERE duree_minutes BETWEEN 20 AND 40;
 
-/* QUERY 14 : Show results with score >= 60 */
-SELECT *
-FROM results
-WHERE score >= 60;
+SELECT * FROM Resultats WHERE score >= 60;
 
-/* QUERY 15 : Show results with score < 50 */
-SELECT *
-FROM results
-WHERE score < 50;
+SELECT * FROM Resultats WHERE score < 50;
 
-/* QUERY 16 : Show questions worth between 5 and 15 points */
-SELECT *
-FROM questions
-WHERE points BETWEEN 5 AND 15;
+SELECT * FROM Questions WHERE points BETWEEN 5 AND 15;
 
-/* QUERY 17 : Show quizzes created by teacher with id = 1 */
-SELECT *
-FROM quiz
-WHERE id_enseignant = 1;
+SELECT * FROM Quiz WHERE id_enseignant = 1;
 
-/* QUERY 18 : Show all quizzes sorted by duration (ASC) */
-SELECT *
-FROM quiz
-ORDER BY duree_minutes ASC;
+SELECT * FROM Quiz ORDER BY duree_minutes ASC;
 
-/* QUERY 19 : Show all results sorted by score (DESC) */
-SELECT *
-FROM results
-ORDER BY score DESC;
+SELECT * FROM Resultats ORDER BY score DESC;
 
-/* QUERY 20 : Show the 5 best scores */
-SELECT *
-FROM results
-ORDER BY score DESC
-LIMIT 5;
+SELECT * FROM Resultats ORDER BY score DESC LIMIT 5;
 
-/* QUERY 21 : Show questions sorted by points (ASC) */
-SELECT *
-FROM questions
-ORDER BY points ASC;
+SELECT * FROM Questions ORDER BY points ASC;
 
-/* QUERY 22 : Show the 3 latest results (DESC by date) */
-SELECT *
-FROM results
-ORDER BY date_passage DESC
-LIMIT 3;
+SELECT * FROM Resultats ORDER BY date_passage DESC LIMIT 3;
 
-/* QUERY 23 : Show the name of each quiz with its category */
-SELECT quiz.titre_quiz, categories.nom_categorie
-FROM quiz
-JOIN categories
-ON quiz.id_categorie = categories.id_categorie;
+SELECT Quiz.titre_quiz, Categories.nom_categorie
+FROM Quiz
+JOIN Categories ON Quiz.id_categorie = Categories.id_categorie;
